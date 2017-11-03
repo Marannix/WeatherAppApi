@@ -2,6 +2,7 @@ package com.londonappbrewery.climapm;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -59,7 +60,8 @@ public class WeatherController extends AppCompatActivity {
     // TODO: Add an OnClickListener to the changeCityButton here:
     changeCityButton.setOnClickListener(new View.OnClickListener() {
       @Override public void onClick(View view) {
-
+        Intent myIntent = new Intent(WeatherController.this, ChangeCityController.class);
+        startActivity(myIntent);
       }
     });
   }
@@ -69,12 +71,25 @@ public class WeatherController extends AppCompatActivity {
   @Override protected void onResume() {
     super.onResume();
     Log.d(TAG, "onResume: called");
-    Log.d(TAG, "onResume: Getting weather for current location");
 
-    getWeatherForCurrentLocation();
+    Intent myIntent = getIntent();
+    String city = myIntent.getStringExtra("City");
+
+    if (city != null) {
+      getWeatherForNewCity(city);
+    } else {
+      Log.d(TAG, "onResume: Getting weather for current location");
+      getWeatherForCurrentLocation();
+    }
   }
 
   // TODO: Add getWeatherForNewCity(String city) here:
+  public void getWeatherForNewCity(String city) {
+    RequestParams params = new RequestParams();
+    params.put("q", city);
+    params.put("appid", APP_ID);
+    letsDoSomeNetworking(params);
+  }
 
   // TODO: Add getWeatherForCurrentLocation() here:
   private void getWeatherForCurrentLocation() {
@@ -178,4 +193,10 @@ public class WeatherController extends AppCompatActivity {
   }
 
   // TODO: Add onPause() here:
+
+  @Override protected void onPause() {
+    super.onPause();
+
+    if (locationManager != null) locationManager.removeUpdates(locationListener);
+  }
 }
