@@ -198,5 +198,7 @@ public class WeatherController extends AppCompatActivity {
     super.onPause();
 
     if (locationManager != null) locationManager.removeUpdates(locationListener);
+
+    //
   }
 }
