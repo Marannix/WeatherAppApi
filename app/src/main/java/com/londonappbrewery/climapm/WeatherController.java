@@ -11,9 +11,16 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+import cz.msebera.android.httpclient.Header;
+import org.json.JSONObject;
 
 public class WeatherController extends AppCompatActivity {
   public String TAG = "Clima";
@@ -50,7 +57,11 @@ public class WeatherController extends AppCompatActivity {
     ImageButton changeCityButton = findViewById(R.id.changeCityButton);
 
     // TODO: Add an OnClickListener to the changeCityButton here:
+    changeCityButton.setOnClickListener(new View.OnClickListener() {
+      @Override public void onClick(View view) {
 
+      }
+    });
   }
 
   // TODO: Add onResume() here:
@@ -78,6 +89,12 @@ public class WeatherController extends AppCompatActivity {
 
         Log.d(TAG, "onLocationChanged: longitude is " + longitude);
         Log.d(TAG, "onLocationChanged: latitude is " + latitude);
+
+        RequestParams params = new RequestParams();
+        params.put("lat", latitude);
+        params.put("lon", longitude);
+        params.put("appid", APP_ID);
+        letsDoSomeNetworking(params);
       }
 
       @Override public void onStatusChanged(String s, int i, Bundle bundle) {
@@ -128,8 +145,37 @@ public class WeatherController extends AppCompatActivity {
   }
 
   // TODO: Add letsDoSomeNetworking(RequestParams params) here:
+  private void letsDoSomeNetworking(RequestParams params) {
+    AsyncHttpClient client = new AsyncHttpClient();
+
+    client.get(WEATHER_URL, params, new JsonHttpResponseHandler() {
+      @Override public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+
+        Log.d(TAG, "onSuccess: " + response.toString());
+
+        WeatherDataModel weatherDataModel = WeatherDataModel.fromJson(response);
+        updateUI(weatherDataModel);
+      }
+
+      @Override public void onFailure(int statusCode, Header[] headers, Throwable throwable,
+          JSONObject errorResponse) {
+
+        Log.e(TAG, "Fail" + errorResponse.toString());
+        Log.d(TAG, "Status code " + statusCode);
+        Toast.makeText(WeatherController.this, "Request Failed", Toast.LENGTH_SHORT).show();
+      }
+    });
+  }
 
   // TODO: Add updateUI() here:
+  private void updateUI(WeatherDataModel weather) {
+    mTemperatureLabel.setText(weather.getTemperature());
+    mCityLabel.setText(weather.getCity());
+
+    int resourceID =
+        getResources().getIdentifier(weather.getIconName(), "drawable", getPackageName());
+    mWeatherImage.setImageResource(resourceID);
+  }
 
   // TODO: Add onPause() here:
 }
